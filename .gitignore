@@ -1,0 +1,9 @@
+.pioenvs
+.piolibdeps
+CMakeListsPrivate.txt
+
+.idea/
+cmake-build-debug/
+
+src/secrets
+platformio.ini
