@@ -4,9 +4,12 @@
 
 #include <animations.h>
 
+FASTLED_USING_NAMESPACE
+
 uint8_t baseHue = 0;
 CRGB leds[NUM_LEDS];
-CRGB current_color = CRGB::White;
+std::string lastAnim = "Off";
+State* state = new State();
 
 funcMap createMap() {
     funcMap anims;
@@ -21,12 +24,45 @@ funcMap createMap() {
     return anims;
 }
 
+bool deserialize(State* state, byte* json) {
+    StaticJsonBuffer<STATE_SIZE> jsonBuffer;
+    JsonObject& root = jsonBuffer.parseObject(json);
+    state->state = root["state"];
+    if (root.containsKey("effect")) {
+        state->effect = root["effect"];
+    }
+    if (root.containsKey("color")) {
+        uint8_t r = root["color"]["r"];
+        uint8_t g = root["color"]["g"];
+        uint8_t b = root["color"]["b"];
+        state->rgbColor = CRGB(r, g, b);
+    }
+    if (root.containsKey("brightness")) {
+        state->brightness = root["brightness"];
+    }
+    return root.success();
+}
+
+void serialize(State* state, char* json) {
+    StaticJsonBuffer<STATE_SIZE> jsonBuffer;
+    JsonObject& root = jsonBuffer.createObject();
+    root["state"] = state->state;
+    root["effect"] = state->effect;
+    JsonObject& color = jsonBuffer.createObject();
+    color["r"] = state->rgbColor.r;
+    color["g"] = state->rgbColor.g;
+    color["b"] = state->rgbColor.b;
+    root["color"] = color;
+    root["brightness"] = state->brightness;
+    root.printTo(json, sizeof(state));
+}
+
 void off() {
     fadeToBlackBy(leds, NUM_LEDS, 10);
 }
 
 void solid() {
-    fill_solid(leds, NUM_LEDS, current_color);
+    fill_solid(leds, NUM_LEDS, state->rgbColor);
 }
 
 void rainbow()

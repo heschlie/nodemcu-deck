@@ -1,6 +1,5 @@
 #include <main.h>
 
-FASTLED_USING_NAMESPACE
 
 void setup_wifi() {
     WiFi.mode(WIFI_STA);
@@ -96,28 +95,38 @@ void mqtt_reconnect() {
 }
 
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<STATE_SIZE> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(payload);
     Serial.println("Received:");
-    Serial.println(*payload);
+    root.prettyPrintTo(Serial);
 
-    const char* state = root["state"];
-    currentState = state;
-    if (state == "OFF") {
+    deserialize(state, payload);
+    currentState = state->state;
+    if (currentState == "OFF") {
         currentAnimation = animations["Off"];
         return;
+    } else if (currentState == "ON") {
+        if (!root.containsKey("color") && !root.containsKey("effect")) {
+            currentAnimation = animations[lastAnim];
+        }
     }
 
+    // We base our actions off of the json payload to know what to do
     if (root.containsKey("color")) {
-        uint8_t r = root["color"]["r"];
-        uint8_t g = root["color"]["g"];
-        uint8_t b = root["color"]["b"];
-        current_color = CRGB(r, g, b);
         currentAnimation = animations["Solid"];
+        state->effect = "Solid";
+        lastAnim = "Solid";
     } else if (root.containsKey("effect")) {
         const char* effect = root["effect"];
+        lastAnim = effect;
         currentAnimation = animations[std::string(effect)];
     }
+}
+
+void update_state() {
+    char* payload = (char *) "";
+    serialize(state, payload);
+    client.publish(STATE_TOPIC, payload);
 }
 
 void loop() {
@@ -129,7 +138,6 @@ void loop() {
     client.loop();
 
     currentAnimation();
-//    rainbow();
     // send the 'leds' array out to the actual LED strip
     FastLED.show();
     // insert a delay to keep the framerate modest
@@ -137,6 +145,5 @@ void loop() {
 
     // do some periodic updates
     EVERY_N_MILLISECONDS( 20 ) { baseHue++; } // slowly cycle the "base color" through the rainbow
-    std::string payload = "{ \"state\": \"" + currentState + "\"}\"";
-    EVERY_N_SECONDS(5) {client.publish(STATE_TOPIC, payload.c_str());}
+    EVERY_N_SECONDS(5) {update_state();}
 }

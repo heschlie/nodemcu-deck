@@ -38,5 +38,6 @@ void setup_wifi();
 void setup_ota();
 void mqtt_reconnect();
 void mqtt_callback(char* topic, byte* payload, unsigned int length);
+void update_state();
 
 funcMap animations;

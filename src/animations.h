@@ -3,6 +3,7 @@
 //
 #include <map>
 #include <string>
+#include <ArduinoJson.h>
 
 // Stuff for FastLED and ESP8266 to prevent flickering
 #include "FastLED.h"
@@ -20,6 +21,18 @@ extern CRGB leds[NUM_LEDS];
 #define BRIGHTNESS          96
 #define FRAMES_PER_SECOND  120
 
+#define STATE_SIZE (JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(5) + 90)
+struct State {
+    const char* state;
+    CRGB rgbColor;
+    const char* effect;
+    int8 brightness;
+
+    State() : state((const char *) "OFF"), rgbColor(CRGB::Red), effect((const char *) "Solid"), brightness((int8) 255){}
+};
+
+extern State* state;
+
 extern uint8_t baseHue; // rotating "base color" used by many of the patterns
 extern CRGB current_color;
 
@@ -32,7 +45,10 @@ void addGlitter();
 void rainbow();
 void solid();
 void off();
+bool deserialize(State* state, byte* json);
+void serialize(State* state, char* json);
 
 typedef void (*vfp)();
 typedef std::map<std::string, vfp> funcMap;
 funcMap createMap();
+extern std::string lastAnim;
