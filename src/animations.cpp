@@ -24,12 +24,10 @@ funcMap createMap() {
     return anims;
 }
 
-bool deserialize(State* state, byte* json) {
-    StaticJsonBuffer<STATE_SIZE> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(json);
-    state->state = root["state"];
+bool deserialize(State* state, JsonObject& root) {
+    state->state = root["state"].as<const char*>();
     if (root.containsKey("effect")) {
-        state->effect = root["effect"];
+        state->effect = root["effect"].as<const char*>();
     }
     if (root.containsKey("color")) {
         uint8_t r = root["color"]["r"];
@@ -43,18 +41,19 @@ bool deserialize(State* state, byte* json) {
     return root.success();
 }
 
-void serialize(State* state, char* json) {
+void serialize(State* state, String &json) {
     StaticJsonBuffer<STATE_SIZE> jsonBuffer;
     JsonObject& root = jsonBuffer.createObject();
-    root["state"] = state->state;
-    root["effect"] = state->effect;
+    root["state"] = state->state.c_str();
+    root["effect"] = state->effect.c_str();
     JsonObject& color = jsonBuffer.createObject();
     color["r"] = state->rgbColor.r;
     color["g"] = state->rgbColor.g;
     color["b"] = state->rgbColor.b;
     root["color"] = color;
     root["brightness"] = state->brightness;
-    root.printTo(json, sizeof(state));
+    root.printTo(json);
+    Serial.println(json);
 }
 
 void off() {

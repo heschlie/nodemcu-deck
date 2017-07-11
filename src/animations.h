@@ -23,12 +23,12 @@ extern CRGB leds[NUM_LEDS];
 
 #define STATE_SIZE (JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(5) + 90)
 struct State {
-    const char* state;
+    std::string state;
     CRGB rgbColor;
-    const char* effect;
-    int8 brightness;
+    std::string effect;
+    int brightness;
 
-    State() : state((const char *) "OFF"), rgbColor(CRGB::Red), effect((const char *) "Solid"), brightness((int8) 255){}
+    State() : state("OFF"), rgbColor(CRGB::Red), effect("Solid"), brightness(255){}
 };
 
 extern State* state;
@@ -45,8 +45,8 @@ void addGlitter();
 void rainbow();
 void solid();
 void off();
-bool deserialize(State* state, byte* json);
-void serialize(State* state, char* json);
+bool deserialize(State* state, JsonObject& root);
+void serialize(State* state, String &json);
 
 typedef void (*vfp)();
 typedef std::map<std::string, vfp> funcMap;

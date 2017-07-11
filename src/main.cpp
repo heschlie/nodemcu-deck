@@ -100,10 +100,11 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     Serial.println("Received:");
     root.prettyPrintTo(Serial);
 
-    deserialize(state, payload);
+    deserialize(state, root);
     currentState = state->state;
     if (currentState == "OFF") {
         currentAnimation = animations["Off"];
+        update_state();
         return;
     } else if (currentState == "ON") {
         if (!root.containsKey("color") && !root.containsKey("effect")) {
@@ -121,12 +122,14 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
         lastAnim = effect;
         currentAnimation = animations[std::string(effect)];
     }
+    update_state();
 }
 
 void update_state() {
-    char* payload = (char *) "";
+    Serial.println("Updating MQTT state");
+    String payload;
     serialize(state, payload);
-    client.publish(STATE_TOPIC, payload);
+    client.publish(STATE_TOPIC, payload.c_str());
 }
 
 void loop() {
