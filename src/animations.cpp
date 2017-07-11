@@ -6,16 +6,27 @@
 
 uint8_t baseHue = 0;
 CRGB leds[NUM_LEDS];
+CRGB current_color = CRGB::White;
 
 funcMap createMap() {
     funcMap anims;
-    anims.insert(std::make_pair("rainbow", &rainbow));
-    anims.insert(std::make_pair("juggle", &juggle));
-    anims.insert(std::make_pair("bpm", &bpm));
-    anims.insert(std::make_pair("sinelon", &sinelon));
-    anims.insert(std::make_pair("confetti", &confetti));
+    anims.insert(std::make_pair("Rainbow", &rainbow));
+    anims.insert(std::make_pair("Juggle", &juggle));
+    anims.insert(std::make_pair("BPM", &bpm));
+    anims.insert(std::make_pair("Cylon", &sinelon));
+    anims.insert(std::make_pair("Confetti", &confetti));
+    anims.insert(std::make_pair("Solid", &solid));
+    anims.insert(std::make_pair("Off", &off));
 
     return anims;
+}
+
+void off() {
+    fadeToBlackBy(leds, NUM_LEDS, 10);
+}
+
+void solid() {
+    fill_solid(leds, NUM_LEDS, current_color);
 }
 
 void rainbow()

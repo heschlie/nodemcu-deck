@@ -22,9 +22,17 @@ IPAddress MQTT_SERVER = IPAddress(192, 168, 1, 205);
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+// Topics
+const char* STATE_TOPIC = "home/deck/lights/state";
+const char* SUB_TOPIC = "home/deck/lights";
+
 // OTA info
 const char* HOSTNAME = "deckcontroller";
 uint16_t otaPort = 8266;
+
+// LED stuff
+vfp currentAnimation = &off;
+std::string currentState = "OFF";
 
 void setup_wifi();
 void setup_ota();

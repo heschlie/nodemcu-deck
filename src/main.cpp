@@ -67,6 +67,7 @@ void setup() {
 
     // MQTT setup
     client.setServer(MQTT_SERVER, 1883);
+    client.subscribe(SUB_TOPIC);
     client.setCallback(mqtt_callback);
 }
 
@@ -83,7 +84,7 @@ void mqtt_reconnect() {
             // Once connected, publish an announcement...
             client.publish("outTopic", "hello world");
             // ... and resubscribe
-            client.subscribe("inTopic");
+            client.subscribe(SUB_TOPIC);
         } else {
             Serial.print("failed, rc=");
             Serial.print(client.state());
@@ -97,8 +98,26 @@ void mqtt_reconnect() {
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     StaticJsonBuffer<200> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(payload);
+    Serial.println("Received:");
+    Serial.println(*payload);
 
-    //
+    const char* state = root["state"];
+    currentState = state;
+    if (state == "OFF") {
+        currentAnimation = animations["Off"];
+        return;
+    }
+
+    if (root.containsKey("color")) {
+        uint8_t r = root["color"]["r"];
+        uint8_t g = root["color"]["g"];
+        uint8_t b = root["color"]["b"];
+        current_color = CRGB(r, g, b);
+        currentAnimation = animations["Solid"];
+    } else if (root.containsKey("effect")) {
+        const char* effect = root["effect"];
+        currentAnimation = animations[std::string(effect)];
+    }
 }
 
 void loop() {
@@ -109,7 +128,8 @@ void loop() {
     }
     client.loop();
 
-    rainbow();
+    currentAnimation();
+//    rainbow();
     // send the 'leds' array out to the actual LED strip
     FastLED.show();
     // insert a delay to keep the framerate modest
@@ -117,5 +137,6 @@ void loop() {
 
     // do some periodic updates
     EVERY_N_MILLISECONDS( 20 ) { baseHue++; } // slowly cycle the "base color" through the rainbow
-    EVERY_N_SECONDS(5) {client.publish("home/deck/lights/state", "{ \"state\": \"ON\"}");}
+    std::string payload = "{ \"state\": \"" + currentState + "\"}\"";
+    EVERY_N_SECONDS(5) {client.publish(STATE_TOPIC, payload.c_str());}
 }
