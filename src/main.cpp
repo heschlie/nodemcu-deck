@@ -62,12 +62,15 @@ void setup() {
     // set master brightness control
     FastLED.setBrightness(BRIGHTNESS);
 
-    animations = createMap();
+    animations = createAnimationsMap();
 
     // MQTT setup
     client.setServer(MQTT_SERVER, 1883);
     client.subscribe(SUB_TOPIC);
     client.setCallback(mqtt_callback);
+
+    // Fire up a color
+    solid();
 }
 
 void mqtt_reconnect() {
@@ -95,10 +98,17 @@ void mqtt_reconnect() {
 }
 
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
-    StaticJsonBuffer<STATE_SIZE> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(payload);
+    StaticJsonDocument<STATE_SIZE> doc;
+    auto error = deserializeJson(doc, payload);
+    if (error) {
+        Serial.print(F("deserializeJson() failed with code "));
+        Serial.println(error.c_str());
+        return;
+    }
+
+    JsonObject root = doc.as<JsonObject>();
     Serial.println("Received:");
-    root.prettyPrintTo(Serial);
+    serializeJsonPretty(root, Serial);
 
     deserialize(state, root);
     currentState = state->state;

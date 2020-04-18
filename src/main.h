@@ -18,7 +18,7 @@
 #include "secrets"
 
 // MQTT stuff
-IPAddress MQTT_SERVER = IPAddress(192, 168, 1, 205);
+IPAddress MQTT_SERVER = IPAddress(192, 168, 1, 5);
 WiFiClient espClient;
 PubSubClient client(espClient);
 

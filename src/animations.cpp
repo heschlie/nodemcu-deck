@@ -11,9 +11,10 @@ CRGB leds[NUM_LEDS];
 std::string lastAnim = "Off";
 State* state = new State();
 
-funcMap createMap() {
+funcMap createAnimationsMap() {
     funcMap anims;
     anims.insert(std::make_pair("Rainbow", &rainbow));
+    anims.insert(std::make_pair("Rainbow Glitter", &rainbowWithGlitter));
     anims.insert(std::make_pair("Juggle", &juggle));
     anims.insert(std::make_pair("BPM", &bpm));
     anims.insert(std::make_pair("Cylon", &sinelon));
@@ -24,7 +25,7 @@ funcMap createMap() {
     return anims;
 }
 
-bool deserialize(State* state, JsonObject& root) {
+void deserialize(State* state, JsonObject& root) {
     state->state = root["state"].as<const char*>();
     if (root.containsKey("effect")) {
         state->effect = root["effect"].as<const char*>();
@@ -38,21 +39,18 @@ bool deserialize(State* state, JsonObject& root) {
     if (root.containsKey("brightness")) {
         state->brightness = root["brightness"];
     }
-    return root.success();
 }
 
 void serialize(State* state, String &json) {
-    StaticJsonBuffer<STATE_SIZE> jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
-    root["state"] = state->state.c_str();
-    root["effect"] = state->effect.c_str();
-    JsonObject& color = jsonBuffer.createObject();
-    color["r"] = state->rgbColor.r;
-    color["g"] = state->rgbColor.g;
-    color["b"] = state->rgbColor.b;
-    root["color"] = color;
-    root["brightness"] = state->brightness;
-    root.printTo(json);
+    StaticJsonDocument<STATE_SIZE> doc;
+    doc["state"] = state->state.c_str();
+    doc["effect"] = state->effect.c_str();
+    doc["brightness"] = state->brightness;
+    doc["color"]["r"] = state->rgbColor.r;
+    doc["color"]["g"] = state->rgbColor.g;
+    doc["color"]["b"] = state->rgbColor.b;
+    
+    serializeJson(doc, json);
     Serial.println(json);
 }
 

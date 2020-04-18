@@ -41,14 +41,13 @@ void bpm();
 void sinelon();
 void confetti();
 void rainbowWithGlitter();
-void addGlitter();
 void rainbow();
 void solid();
 void off();
-bool deserialize(State* state, JsonObject& root);
+void deserialize(State* state, JsonObject& root);
 void serialize(State* state, String &json);
 
 typedef void (*vfp)();
 typedef std::map<std::string, vfp> funcMap;
-funcMap createMap();
+funcMap createAnimationsMap();
 extern std::string lastAnim;

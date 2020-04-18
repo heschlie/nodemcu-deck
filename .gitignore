@@ -1,9 +1,11 @@
 .pioenvs
 .piolibdeps
+.pio/
 CMakeListsPrivate.txt
 
 .idea/
 cmake-build-debug/
+.vscode/
 
 src/secrets
 platformio.ini
